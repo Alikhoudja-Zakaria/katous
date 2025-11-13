@@ -1,8 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the Google Gemini AI Client
-// The API key is securely managed by the environment and does not need to be set here.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+/**
+ * Lazily initializes and returns the Google Gemini AI Client.
+ * This prevents the app from crashing on load if the API key is not available.
+ * @returns An instance of the GoogleGenAI client.
+ */
+const getAiClient = () => {
+  // The API key is securely managed by the environment and does not need to be set here.
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("API_KEY environment variable not found.");
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 /**
  * Converts an image URL to a base64 encoded string.
@@ -43,6 +53,7 @@ const imageUrlToBase64 = async (imageUrl: string): Promise<string> => {
  */
 export const generateArtDescription = async (imageUrl: string): Promise<string> => {
   try {
+    const ai = getAiClient(); // Initialize the client on-demand
     const base64ImageData = await imageUrlToBase64(imageUrl);
     
     const imagePart = {
